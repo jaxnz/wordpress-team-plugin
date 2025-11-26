@@ -23,6 +23,7 @@
 				photoFrameButton: 'Use photo',
 			};
 		var mediaFrame = null;
+		var wpMedia = window.wp && window.wp.media ? window.wp.media : null;
 
 		if ($list.length) {
 			$list.sortable({
@@ -118,7 +119,7 @@
 		$btnSelectPhoto.on('click', function (e) {
 			e.preventDefault();
 
-			if (!wp || !wp.media || !wp.media.library) {
+			if (!wpMedia || !wpMedia.library) {
 				return;
 			}
 
@@ -127,7 +128,7 @@
 				return;
 			}
 
-			mediaFrame = wp.media({
+			mediaFrame = wpMedia({
 				title: cfg.photoFrameTitle,
 				button: { text: cfg.photoFrameButton },
 				multiple: false,

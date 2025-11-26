@@ -3,7 +3,7 @@
  * Plugin Name: Team Profiles
  * Description: Create and display a sortable team grid with photos, qualifications, and blurbs via shortcode.
  * Version: 1.0.0
- * Author: Codex
+ * Author: Jackson Lee
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -246,7 +246,7 @@ final class Team_Profiles {
 			wp_enqueue_script(
 				'team-profiles-admin',
 				plugins_url( 'assets/team-profiles-admin.js', __FILE__ ),
-				array( 'jquery', 'jquery-ui-sortable' ),
+				array( 'jquery', 'jquery-ui-sortable', 'media-editor' ),
 				self::VERSION,
 				true
 			);
