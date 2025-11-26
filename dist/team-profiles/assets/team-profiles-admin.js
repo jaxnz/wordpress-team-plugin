@@ -12,6 +12,16 @@
 		var $btnNew = $('#team-profiles-new');
 		var $btnSelectPhoto = $('#team-profiles-photo-select');
 		var $btnRemovePhoto = $('#team-profiles-photo-remove');
+		var cfg =
+			window.TeamProfilesOrder ||
+			{
+				nonce: '',
+				savingText: 'Saving...',
+				savedText: 'Saved.',
+				errorText: 'Error saving order.',
+				photoFrameTitle: 'Select photo',
+				photoFrameButton: 'Use photo',
+			};
 		var mediaFrame = null;
 
 		if ($list.length) {
@@ -44,22 +54,22 @@
 		}
 
 		function saveOrder(order) {
-			setStatus(TeamProfilesOrder.savingText, 'notice-success');
+			setStatus(cfg.savingText, 'notice-success');
 
 			$.post(ajaxurl, {
 				action: 'team_profiles_save_order',
-				nonce: TeamProfilesOrder.nonce,
+				nonce: cfg.nonce,
 				order: order,
 			})
 				.done(function (response) {
 					if (response && response.success) {
-						setStatus(TeamProfilesOrder.savedText, 'notice-success');
+						setStatus(cfg.savedText, 'notice-success');
 					} else {
-						setStatus(TeamProfilesOrder.errorText, 'notice-error');
+						setStatus(cfg.errorText, 'notice-error');
 					}
 				})
 				.fail(function () {
-					setStatus(TeamProfilesOrder.errorText, 'notice-error');
+					setStatus(cfg.errorText, 'notice-error');
 				});
 		}
 
@@ -108,14 +118,18 @@
 		$btnSelectPhoto.on('click', function (e) {
 			e.preventDefault();
 
+			if (!wp || !wp.media || !wp.media.library) {
+				return;
+			}
+
 			if (mediaFrame) {
 				mediaFrame.open();
 				return;
 			}
 
 			mediaFrame = wp.media({
-				title: TeamProfilesOrder.photoFrameTitle,
-				button: { text: TeamProfilesOrder.photoFrameButton },
+				title: cfg.photoFrameTitle,
+				button: { text: cfg.photoFrameButton },
 				multiple: false,
 			});
 
