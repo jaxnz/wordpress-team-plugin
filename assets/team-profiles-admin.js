@@ -119,7 +119,7 @@
 		$btnSelectPhoto.on('click', function (e) {
 			e.preventDefault();
 
-			if (!wpMedia || !wpMedia.library) {
+			if (!wpMedia) {
 				return;
 			}
 
