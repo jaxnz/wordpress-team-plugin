@@ -1,28 +1,36 @@
 (function ($) {
 	$(function () {
 		var $list = $('#team-profiles-sortable');
-
-		if (!$list.length) {
-			return;
-		}
-
 		var $status = $('#team-profiles-order-status');
+		var $form = $('.team-profiles-form');
+		var $memberId = $('#team-profiles-member-id');
+		var $name = $('#team-profiles-name');
+		var $qualification = $('#team-profiles-qualification');
+		var $blurb = $('#team-profiles-blurb');
+		var $photoId = $('#team-profiles-photo-id');
+		var $photoPreview = $('#team-profiles-photo-preview');
+		var $btnNew = $('#team-profiles-new');
+		var $btnSelectPhoto = $('#team-profiles-photo-select');
+		var $btnRemovePhoto = $('#team-profiles-photo-remove');
+		var mediaFrame = null;
 
-		$list.sortable({
-			handle: '.team-profiles-sortable__handle',
-			placeholder: 'team-profiles-sortable__placeholder-row',
-			forcePlaceholderSize: true,
-			update: function () {
-				var order = $list
-					.children('.team-profiles-sortable__item')
-					.map(function () {
-						return $(this).data('id');
-					})
-					.get();
+		if ($list.length) {
+			$list.sortable({
+				handle: '.team-profiles-sortable__handle',
+				placeholder: 'team-profiles-sortable__placeholder-row',
+				forcePlaceholderSize: true,
+				update: function () {
+					var order = $list
+						.children('.team-profiles-sortable__item')
+						.map(function () {
+							return $(this).data('id');
+						})
+						.get();
 
-				saveOrder(order);
-			},
-		});
+					saveOrder(order);
+				},
+			});
+		}
 
 		function setStatus(message, type) {
 			if (!$status.length) {
@@ -54,5 +62,79 @@
 					setStatus(TeamProfilesOrder.errorText, 'notice-error');
 				});
 		}
+
+		function resetForm() {
+			$memberId.val('');
+			$name.val('');
+			$qualification.val('');
+			$blurb.val('');
+			$photoId.val('');
+			updatePreview('');
+			$('#team-profiles-submit').text('Save Member');
+		}
+
+		function updatePreview(src) {
+			if (src) {
+				$photoPreview
+					.removeClass('team-profiles-photo__placeholder')
+					.css('background-image', 'url(' + src + ')');
+			} else {
+				$photoPreview
+					.addClass('team-profiles-photo__placeholder')
+					.css('background-image', 'none');
+			}
+		}
+
+		function loadMember($item) {
+			$memberId.val($item.data('id'));
+			$name.val($item.data('name'));
+			$qualification.val($item.data('qualification'));
+			$blurb.val($item.data('blurb'));
+			$photoId.val($item.data('photo-id'));
+			updatePreview($item.data('photo-src'));
+			$('#team-profiles-submit').text('Update Member');
+			window.scrollTo({ top: $form.offset().top - 20, behavior: 'smooth' });
+		}
+
+		$list.on('click', '.team-profiles-edit', function () {
+			var $item = $(this).closest('.team-profiles-sortable__item');
+			loadMember($item);
+		});
+
+		$btnNew.on('click', function () {
+			resetForm();
+		});
+
+		$btnSelectPhoto.on('click', function (e) {
+			e.preventDefault();
+
+			if (mediaFrame) {
+				mediaFrame.open();
+				return;
+			}
+
+			mediaFrame = wp.media({
+				title: TeamProfilesOrder.photoFrameTitle,
+				button: { text: TeamProfilesOrder.photoFrameButton },
+				multiple: false,
+			});
+
+			mediaFrame.on('select', function () {
+				var attachment = mediaFrame.state().get('selection').first().toJSON();
+				$photoId.val(attachment.id);
+				updatePreview(attachment.sizes && attachment.sizes.thumbnail ? attachment.sizes.thumbnail.url : attachment.url);
+			});
+
+			mediaFrame.open();
+		});
+
+		$btnRemovePhoto.on('click', function (e) {
+			e.preventDefault();
+			$photoId.val('');
+			updatePreview('');
+		});
+
+		// Initialize preview placeholder on load.
+		updatePreview($photoPreview.data('src'));
 	});
 })(jQuery);

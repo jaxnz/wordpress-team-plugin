@@ -1,8 +1,23 @@
 #team-profiles-sortable {
-	margin: 20px 0;
+	margin: 20px 0 8px;
 	padding: 0;
 	list-style: none;
-	max-width: 800px;
+}
+
+.team-profiles-admin {
+	display: grid;
+	grid-template-columns: 1.2fr 1fr;
+	gap: 24px;
+	align-items: start;
+	margin-top: 20px;
+}
+
+.team-profiles-admin__panel {
+	background: #fff;
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	padding: 16px 20px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
 .team-profiles-sortable__item {
@@ -67,4 +82,57 @@
 #team-profiles-order-status {
 	margin-top: 12px;
 	display: inline-block;
+}
+
+.team-profiles-form__actions {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.team-profiles-photo {
+	margin: 18px 0;
+}
+
+.team-profiles-photo__controls {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.team-profiles-photo__preview {
+	width: 96px;
+	height: 96px;
+	border-radius: 50%;
+	background-size: cover;
+	background-position: center;
+	border: 2px solid #e5e7eb;
+}
+
+.team-profiles-photo__placeholder {
+	background: linear-gradient(135deg, #e2e8f0, #f8fafc);
+}
+
+.team-profiles-photo__buttons {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.link-button.button {
+	background: none;
+	border: none;
+	color: #2271b1;
+	box-shadow: none;
+	text-decoration: underline;
+}
+
+.team-profiles-shortcode code {
+	font-size: 13px;
+}
+
+@media (max-width: 1100px) {
+	.team-profiles-admin {
+		grid-template-columns: 1fr;
+	}
 }

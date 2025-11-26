@@ -34,6 +34,7 @@ final class Team_Profiles {
 		add_action( 'save_post_team_member', array( $this, 'save_meta' ), 10, 2 );
 		add_action( 'admin_menu', array( $this, 'register_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_assets' ) );
+		add_action( 'admin_post_team_profiles_save_member', array( $this, 'handle_save_member' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_frontend_assets' ) );
 		add_action( 'wp_ajax_team_profiles_save_order', array( $this, 'ajax_save_order' ) );
 		add_filter( 'manage_team_member_posts_columns', array( $this, 'add_admin_columns' ) );
@@ -73,8 +74,8 @@ final class Team_Profiles {
 			'public'             => false,
 			'exclude_from_search'=> true,
 			'publicly_queryable' => false,
-			'show_ui'            => true,
-			'show_in_menu'       => self::SLUG,
+			'show_ui'            => false,
+			'show_in_menu'       => false,
 			'show_in_rest'       => true,
 			'menu_icon'          => 'dashicons-groups',
 			'supports'           => array( 'title', 'thumbnail', 'page-attributes' ),
@@ -219,34 +220,9 @@ final class Team_Profiles {
 			__( 'Team Profiles', 'team-profiles' ),
 			'edit_posts',
 			self::SLUG,
-			array( $this, 'render_welcome_page' ),
+			array( $this, 'render_manage_page' ),
 			'dashicons-groups',
 			26
-		);
-
-		add_submenu_page(
-			self::SLUG,
-			__( 'Team Members', 'team-profiles' ),
-			__( 'Team Members', 'team-profiles' ),
-			'edit_posts',
-			'edit.php?post_type=team_member'
-		);
-
-		add_submenu_page(
-			self::SLUG,
-			__( 'Add New Member', 'team-profiles' ),
-			__( 'Add New Member', 'team-profiles' ),
-			'edit_posts',
-			'post-new.php?post_type=team_member'
-		);
-
-		add_submenu_page(
-			self::SLUG,
-			__( 'Order Team', 'team-profiles' ),
-			__( 'Order Team', 'team-profiles' ),
-			'edit_posts',
-			'team-profiles-order',
-			array( $this, 'render_order_page' )
 		);
 	}
 
@@ -256,7 +232,9 @@ final class Team_Profiles {
 	 * @param string $hook Current admin page hook.
 	 */
 	public function admin_assets( $hook ) {
-		if ( 'team-profiles_page_team-profiles-order' === $hook ) {
+		if ( 'toplevel_page_team-profiles' === $hook ) {
+			wp_enqueue_media();
+
 			wp_enqueue_style(
 				'team-profiles-admin',
 				plugins_url( 'assets/team-profiles-admin.css', __FILE__ ),
@@ -281,6 +259,8 @@ final class Team_Profiles {
 					'savingText' => __( 'Saving order...', 'team-profiles' ),
 					'savedText'  => __( 'Order saved.', 'team-profiles' ),
 					'errorText'  => __( 'Unable to save order. Please try again.', 'team-profiles' ),
+					'photoFrameTitle' => __( 'Select profile photo', 'team-profiles' ),
+					'photoFrameButton'=> __( 'Use this photo', 'team-profiles' ),
 				)
 			);
 		}
@@ -383,30 +363,13 @@ final class Team_Profiles {
 	}
 
 	/**
-	 * Render the welcome page with instructions and shortcode.
+	 * Render manage page: add/edit members and ordering.
 	 */
-	public function render_welcome_page() {
-		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'Team Profiles', 'team-profiles' ); ?></h1>
-			<p><?php esc_html_e( 'Add team members, drag to order them, and drop the shortcode on any page to display a responsive, SEO-friendly grid.', 'team-profiles' ); ?></p>
-			<h2><?php esc_html_e( 'Shortcode', 'team-profiles' ); ?></h2>
-			<p><code>[team_profiles]</code> <?php esc_html_e( 'or', 'team-profiles' ); ?> <code>[team]</code></p>
-			<p><?php esc_html_e( 'Optional attribute: count="4" limits how many members display.', 'team-profiles' ); ?></p>
-			<h2><?php esc_html_e( 'Workflow', 'team-profiles' ); ?></h2>
-			<ol>
-				<li><?php esc_html_e( 'Use "Team Members" to add a name, qualification, blurb, and featured image.', 'team-profiles' ); ?></li>
-				<li><?php esc_html_e( 'Open "Order Team" to drag-and-drop members into the desired display order.', 'team-profiles' ); ?></li>
-				<li><?php esc_html_e( 'Place the shortcode on any page or post.', 'team-profiles' ); ?></li>
-			</ol>
-		</div>
-		<?php
-	}
+	public function render_manage_page() {
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			return;
+		}
 
-	/**
-	 * Render ordering page content.
-	 */
-	public function render_order_page() {
 		$members = get_posts(
 			array(
 				'post_type'      => 'team_member',
@@ -417,43 +380,117 @@ final class Team_Profiles {
 			)
 		);
 		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'Order Team Members', 'team-profiles' ); ?></h1>
-			<p><?php esc_html_e( 'Drag and drop to control the display order used by the shortcode.', 'team-profiles' ); ?></p>
+		$status = isset( $_GET['team_profiles_status'] ) ? sanitize_text_field( wp_unslash( $_GET['team_profiles_status'] ) ) : '';
+		$message = '';
+		if ( 'created' === $status ) {
+			$message = __( 'Team member added.', 'team-profiles' );
+		} elseif ( 'updated' === $status ) {
+			$message = __( 'Team member updated.', 'team-profiles' );
+		} elseif ( 'error' === $status ) {
+			$message = __( 'There was a problem saving the team member. Please try again.', 'team-profiles' );
+		}
 
-			<?php if ( empty( $members ) ) : ?>
-				<p><?php esc_html_e( 'No team members yet. Add some first.', 'team-profiles' ); ?></p>
-			<?php else : ?>
-				<ul id="team-profiles-sortable" class="team-profiles-sortable" aria-live="polite">
-					<?php
-					foreach ( $members as $member ) :
-						$qualification = get_post_meta( $member->ID, 'team_profiles_qualification', true );
-						$thumb         = get_the_post_thumbnail(
-							$member->ID,
-							'thumbnail',
-							array(
-								'class' => 'team-profiles-sortable__thumb',
-								'alt'   => get_the_title( $member->ID ),
-							)
-						);
-						?>
-						<li class="team-profiles-sortable__item" data-id="<?php echo esc_attr( $member->ID ); ?>">
-							<span class="team-profiles-sortable__handle dashicons dashicons-move" aria-hidden="true"></span>
-							<span class="team-profiles-sortable__thumb-wrapper">
-								<?php echo $thumb ? $thumb : '<span class="team-profiles-sortable__placeholder" aria-hidden="true"></span>'; ?>
-							</span>
-							<span class="team-profiles-sortable__text">
-								<strong><?php echo esc_html( $member->post_title ); ?></strong>
-								<?php if ( $qualification ) : ?>
-									<em><?php echo esc_html( $qualification ); ?></em>
-								<?php endif; ?>
-							</span>
-						</li>
-					<?php endforeach; ?>
-				</ul>
-				<p class="description"><?php esc_html_e( 'The order here is the order shown on the frontend.', 'team-profiles' ); ?></p>
-				<div id="team-profiles-order-status" class="notice-inline" aria-live="polite"></div>
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Team Profiles', 'team-profiles' ); ?></h1>
+			<p><?php esc_html_e( 'Manage your team from one page: add/edit members, upload their photo, and drag to order. Use the shortcode to display on the front end.', 'team-profiles' ); ?></p>
+
+			<?php if ( $message ) : ?>
+				<?php $class = 'error' === $status ? 'notice notice-error' : 'notice notice-success'; ?>
+				<div class="<?php echo esc_attr( $class ); ?>"><p><?php echo esc_html( $message ); ?></p></div>
 			<?php endif; ?>
+
+			<div class="team-profiles-admin">
+				<div class="team-profiles-admin__panel">
+					<h2><?php esc_html_e( 'Add or Edit a Team Member', 'team-profiles' ); ?></h2>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="team-profiles-form">
+						<input type="hidden" name="action" value="team_profiles_save_member" />
+						<?php wp_nonce_field( 'team_profiles_save_member', 'team_profiles_save_member_nonce' ); ?>
+						<input type="hidden" name="member_id" id="team-profiles-member-id" value="" />
+						<input type="hidden" name="team_profiles_photo_id" id="team-profiles-photo-id" value="" />
+
+						<p>
+							<label for="team-profiles-name"><strong><?php esc_html_e( 'Name', 'team-profiles' ); ?> *</strong></label>
+							<input type="text" required class="widefat" name="team_profiles_name" id="team-profiles-name" />
+						</p>
+
+						<p>
+							<label for="team-profiles-qualification"><strong><?php esc_html_e( 'Qualification / Role', 'team-profiles' ); ?></strong></label>
+							<input type="text" class="widefat" name="team_profiles_qualification" id="team-profiles-qualification" />
+						</p>
+
+						<p>
+							<label for="team-profiles-blurb"><strong><?php esc_html_e( 'Short blurb', 'team-profiles' ); ?></strong></label>
+							<textarea class="widefat" name="team_profiles_blurb" id="team-profiles-blurb" rows="5"></textarea>
+						</p>
+
+						<div class="team-profiles-photo">
+							<label><strong><?php esc_html_e( 'Profile photo', 'team-profiles' ); ?></strong></label>
+							<div class="team-profiles-photo__controls">
+								<div class="team-profiles-photo__preview team-profiles-photo__placeholder" id="team-profiles-photo-preview" data-src=""></div>
+								<div class="team-profiles-photo__buttons">
+									<button type="button" class="button" id="team-profiles-photo-select"><?php esc_html_e( 'Select photo', 'team-profiles' ); ?></button>
+									<button type="button" class="button link-button" id="team-profiles-photo-remove"><?php esc_html_e( 'Remove', 'team-profiles' ); ?></button>
+								</div>
+							</div>
+							<p class="description"><?php esc_html_e( 'Square images work best. The photo will be shown as a circle.', 'team-profiles' ); ?></p>
+						</div>
+
+						<p class="team-profiles-form__actions">
+							<button type="submit" class="button button-primary" id="team-profiles-submit"><?php esc_html_e( 'Save Member', 'team-profiles' ); ?></button>
+							<button type="button" class="button" id="team-profiles-new"><?php esc_html_e( 'Add New', 'team-profiles' ); ?></button>
+						</p>
+					</form>
+				</div>
+
+				<div class="team-profiles-admin__panel">
+					<h2><?php esc_html_e( 'Team list & order', 'team-profiles' ); ?></h2>
+					<?php if ( empty( $members ) ) : ?>
+						<p><?php esc_html_e( 'No team members yet. Add some first.', 'team-profiles' ); ?></p>
+					<?php else : ?>
+						<ul id="team-profiles-sortable" class="team-profiles-sortable" aria-live="polite">
+							<?php
+							foreach ( $members as $member ) :
+								$qualification = get_post_meta( $member->ID, 'team_profiles_qualification', true );
+								$thumb_id      = get_post_thumbnail_id( $member->ID );
+								$thumb_src     = $thumb_id ? wp_get_attachment_image_src( $thumb_id, 'thumbnail' ) : false;
+								?>
+								<li class="team-profiles-sortable__item" data-id="<?php echo esc_attr( $member->ID ); ?>" data-name="<?php echo esc_attr( $member->post_title ); ?>" data-qualification="<?php echo esc_attr( $qualification ); ?>" data-blurb="<?php echo esc_attr( get_post_meta( $member->ID, 'team_profiles_blurb', true ) ); ?>" data-photo-id="<?php echo esc_attr( $thumb_id ); ?>" data-photo-src="<?php echo $thumb_src ? esc_url( $thumb_src[0] ) : ''; ?>">
+									<span class="team-profiles-sortable__handle dashicons dashicons-move" aria-hidden="true"></span>
+									<span class="team-profiles-sortable__thumb-wrapper">
+										<?php
+										$thumb = get_the_post_thumbnail(
+											$member->ID,
+											'thumbnail',
+											array(
+												'class' => 'team-profiles-sortable__thumb',
+												'alt'   => get_the_title( $member->ID ),
+											)
+										);
+										echo $thumb ? $thumb : '<span class="team-profiles-sortable__placeholder" aria-hidden="true"></span>';
+										?>
+									</span>
+									<span class="team-profiles-sortable__text">
+										<strong><?php echo esc_html( $member->post_title ); ?></strong>
+										<?php if ( $qualification ) : ?>
+											<em><?php echo esc_html( $qualification ); ?></em>
+										<?php endif; ?>
+									</span>
+									<button type="button" class="button button-small team-profiles-edit"><?php esc_html_e( 'Edit', 'team-profiles' ); ?></button>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+						<p class="description"><?php esc_html_e( 'Drag to reorder. The order here is the order shown on the frontend.', 'team-profiles' ); ?></p>
+						<div id="team-profiles-order-status" class="notice-inline" aria-live="polite"></div>
+					<?php endif; ?>
+
+					<div class="team-profiles-shortcode">
+						<h3><?php esc_html_e( 'Shortcode', 'team-profiles' ); ?></h3>
+						<p><code>[team_profiles]</code> <?php esc_html_e( 'or', 'team-profiles' ); ?> <code>[team]</code></p>
+						<p class="description"><?php esc_html_e( 'Optional attribute: count="4" limits how many members display.', 'team-profiles' ); ?></p>
+					</div>
+				</div>
+			</div>
 		</div>
 		<?php
 	}
@@ -515,6 +552,74 @@ final class Team_Profiles {
 
 			echo $qualification ? esc_html( $qualification ) : '&mdash;';
 		}
+	}
+
+	/**
+	 * Handle add/update of team members from custom admin form.
+	 */
+	public function handle_save_member() {
+		if ( ! isset( $_POST['team_profiles_save_member_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['team_profiles_save_member_nonce'] ) ), 'team_profiles_save_member' ) ) {
+			wp_safe_redirect( add_query_arg( 'team_profiles_status', 'error', admin_url( 'admin.php?page=' . self::SLUG ) ) );
+			exit;
+		}
+
+		$member_id     = isset( $_POST['member_id'] ) ? intval( $_POST['member_id'] ) : 0;
+		$name          = isset( $_POST['team_profiles_name'] ) ? sanitize_text_field( wp_unslash( $_POST['team_profiles_name'] ) ) : '';
+		$qualification = isset( $_POST['team_profiles_qualification'] ) ? sanitize_text_field( wp_unslash( $_POST['team_profiles_qualification'] ) ) : '';
+		$blurb         = isset( $_POST['team_profiles_blurb'] ) ? $this->sanitize_blurb( wp_unslash( $_POST['team_profiles_blurb'] ) ) : '';
+		$photo_id      = isset( $_POST['team_profiles_photo_id'] ) ? intval( $_POST['team_profiles_photo_id'] ) : 0;
+
+		if ( '' === $name ) {
+			wp_safe_redirect( add_query_arg( 'team_profiles_status', 'error', admin_url( 'admin.php?page=' . self::SLUG ) ) );
+			exit;
+		}
+
+		$is_new = 0 === $member_id;
+
+		if ( $is_new ) {
+			if ( ! current_user_can( 'publish_posts' ) ) {
+				wp_safe_redirect( add_query_arg( 'team_profiles_status', 'error', admin_url( 'admin.php?page=' . self::SLUG ) ) );
+				exit;
+			}
+
+			$member_id = wp_insert_post(
+				array(
+					'post_type'   => 'team_member',
+					'post_status' => 'publish',
+					'post_title'  => $name,
+				)
+			);
+		} else {
+			if ( 'team_member' !== get_post_type( $member_id ) || ! current_user_can( 'edit_post', $member_id ) ) {
+				wp_safe_redirect( add_query_arg( 'team_profiles_status', 'error', admin_url( 'admin.php?page=' . self::SLUG ) ) );
+				exit;
+			}
+
+			wp_update_post(
+				array(
+					'ID'         => $member_id,
+					'post_title' => $name,
+				)
+			);
+		}
+
+		if ( $member_id && ! is_wp_error( $member_id ) ) {
+			update_post_meta( $member_id, 'team_profiles_qualification', $qualification );
+			update_post_meta( $member_id, 'team_profiles_blurb', $blurb );
+
+			if ( $photo_id ) {
+				set_post_thumbnail( $member_id, $photo_id );
+			} else {
+				delete_post_thumbnail( $member_id );
+			}
+
+			$status = $is_new ? 'created' : 'updated';
+			wp_safe_redirect( add_query_arg( 'team_profiles_status', $status, admin_url( 'admin.php?page=' . self::SLUG ) ) );
+			exit;
+		}
+
+		wp_safe_redirect( add_query_arg( 'team_profiles_status', 'error', admin_url( 'admin.php?page=' . self::SLUG ) ) );
+		exit;
 	}
 }
 
