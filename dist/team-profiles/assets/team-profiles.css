@@ -1,0 +1,84 @@
+.team-profiles-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 1.5rem;
+	align-items: start;
+}
+
+.team-profiles__item {
+	background: #fff;
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
+	padding: 18px 16px;
+	text-align: center;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.team-profiles__image-wrapper {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-bottom: 12px;
+}
+
+.team-profiles__photo,
+.team-profiles__placeholder {
+	width: 120px;
+	height: 120px;
+	border-radius: 999px;
+	object-fit: cover;
+	display: block;
+}
+
+.team-profiles__photo {
+	border: 4px solid #f5f7fb;
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.team-profiles__placeholder {
+	background: linear-gradient(135deg, #e2e8f0, #f8fafc);
+}
+
+.team-profiles__name {
+	font-size: 1.1rem;
+	margin: 0 0 6px;
+	color: #111827;
+}
+
+.team-profiles__role {
+	margin: 0 0 8px;
+	color: #4b5563;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+}
+
+.team-profiles__blurb {
+	margin: 0;
+	color: #374151;
+	font-size: 0.95rem;
+	line-height: 1.6;
+}
+
+.team-profiles__item:focus-within,
+.team-profiles__item:hover {
+	border-color: #d1d5db;
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+}
+
+@media (max-width: 1100px) {
+	.team-profiles-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 900px) {
+	.team-profiles-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 600px) {
+	.team-profiles-grid {
+		grid-template-columns: 1fr;
+	}
+}

@@ -1,0 +1,70 @@
+#team-profiles-sortable {
+	margin: 20px 0;
+	padding: 0;
+	list-style: none;
+	max-width: 800px;
+}
+
+.team-profiles-sortable__item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 12px;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	background: #fff;
+	margin-bottom: 10px;
+	cursor: move;
+}
+
+.team-profiles-sortable__handle {
+	color: #667085;
+	font-size: 16px;
+}
+
+.team-profiles-sortable__thumb-wrapper {
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	overflow: hidden;
+	background: #f2f4f7;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.team-profiles-sortable__thumb {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.team-profiles-sortable__placeholder {
+	display: block;
+	width: 100%;
+	height: 100%;
+	background: #e5e7eb;
+}
+
+.team-profiles-sortable__text strong {
+	display: block;
+}
+
+.team-profiles-sortable__text em {
+	color: #64748b;
+	font-style: normal;
+}
+
+.team-profiles-sortable__placeholder-row {
+	height: 72px;
+	border: 1px dashed #cbd5e1;
+	background: #f8fafc;
+	border-radius: 6px;
+	margin-bottom: 10px;
+}
+
+#team-profiles-order-status {
+	margin-top: 12px;
+	display: inline-block;
+}
