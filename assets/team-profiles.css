@@ -6,12 +6,16 @@
 }
 
 .team-profiles__item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 	background: #fff;
 	border: 1px solid #e5e7eb;
 	border-radius: 12px;
 	padding: 18px 16px;
 	text-align: center;
 	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+	height: 100%;
 }
 
 .team-profiles__image-wrapper {
@@ -19,6 +23,8 @@
 	justify-content: center;
 	align-items: center;
 	margin-bottom: 12px;
+	width: 130px;
+	height: 130px;
 }
 
 .team-profiles__photo,
@@ -28,6 +34,7 @@
 	border-radius: 999px;
 	object-fit: cover;
 	display: block;
+	overflow: hidden;
 }
 
 .team-profiles__photo {
@@ -57,6 +64,7 @@
 	color: #374151;
 	font-size: 0.95rem;
 	line-height: 1.6;
+	width: 100%;
 }
 
 .team-profiles__item:focus-within,
