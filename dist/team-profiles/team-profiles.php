@@ -379,8 +379,7 @@ final class Team_Profiles {
 				'post_status'    => array( 'publish', 'draft', 'pending', 'future' ),
 			)
 		);
-		?>
-		$status = isset( $_GET['team_profiles_status'] ) ? sanitize_text_field( wp_unslash( $_GET['team_profiles_status'] ) ) : '';
+		$status  = isset( $_GET['team_profiles_status'] ) ? sanitize_text_field( wp_unslash( $_GET['team_profiles_status'] ) ) : '';
 		$message = '';
 		if ( 'created' === $status ) {
 			$message = __( 'Team member added.', 'team-profiles' );
@@ -389,7 +388,6 @@ final class Team_Profiles {
 		} elseif ( 'error' === $status ) {
 			$message = __( 'There was a problem saving the team member. Please try again.', 'team-profiles' );
 		}
-
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Team Profiles', 'team-profiles' ); ?></h1>
