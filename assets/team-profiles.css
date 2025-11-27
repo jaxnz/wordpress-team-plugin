@@ -1,7 +1,8 @@
 .team-profiles-grid {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: 1.5rem;
+	column-gap: 1.5rem;
+	row-gap: 2.25rem;
 	align-items: start;
 }
 
@@ -23,16 +24,17 @@
 	justify-content: center;
 	align-items: center;
 	margin-bottom: 12px;
-	width: 130px;
-	height: 130px;
+	width: 150px;
+	height: 150px;
 }
 
 .team-profiles__photo,
 .team-profiles__placeholder {
-	width: 120px;
-	height: 120px;
-	border-radius: 999px;
+	width: 140px;
+	height: 140px;
+	border-radius: 50%;
 	object-fit: cover;
+	aspect-ratio: 1 / 1;
 	display: block;
 	overflow: hidden;
 }
@@ -56,6 +58,7 @@
 	margin: 0 0 8px;
 	color: #4b5563;
 	font-weight: 600;
+	font-size: 0.95rem;
 	letter-spacing: 0.01em;
 }
 
