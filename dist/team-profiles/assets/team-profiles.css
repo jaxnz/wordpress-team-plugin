@@ -1,7 +1,8 @@
 .team-profiles-grid {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: 2.25rem 1.5rem;
+	gap: 2.75rem 1.5rem;
+	row-gap: 2.75rem !important;
 	align-items: start;
 }
 
